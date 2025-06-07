@@ -61,7 +61,7 @@ assets/
 
 1. **Clone the repository:**
    ```sh
-   git clone <your-repo-url>
+   git clone https://github.com/rajeshbelgaonkar19/ERP-Mobile-App.git
    cd erp_mobile_app
    ```
 
@@ -76,13 +76,6 @@ assets/
    ```
    - For web: `flutter run -d chrome`
    - For desktop: `flutter run -d windows` (or `linux`, `macos`)
-
-4. **Demo Login Credentials:**
-   - Admission: `admission@pvppcoe.ac.in` / `12345678`
-   - HR: `hr@pvppcoe.ac.in` / `12345678`
-   - HOD: `hodcomps@pvppcoe.ac.in` / `12345678`
-   - Faculty: `facultydemo@pvppcoe.ac.in` / `12345678`
-   - Student: `dummy11@gmail.com` / `12345678`
 
 ## Usage
 
