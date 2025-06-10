@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/themes/app_theme.dart';
 import 'config/app_routes.dart';
 
 void main() {
-  runApp(const ERPApp());
+  runApp(const ProviderScope(child: ERPApp()));
 }
 
 class ERPApp extends StatelessWidget {

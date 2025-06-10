@@ -1,0 +1,94 @@
+{
+    "baseUrl": "https://api.test.vppcoe.getflytechnologies.com/api",
+    "admission": {
+        "getBranch": {
+            "method": "GET",
+            "endpoint": "/admission/getBranch"
+        },
+        "getProgram": {
+            "method": "GET",
+            "endpoint": "/admission/getProgram"
+        },
+        "getCategory": {
+            "method": "GET",
+            "endpoint": "/admission/getCategory"
+        },
+        "admissionDashboard": {
+            "method": "GET",
+            "endpoint": "/admission/admissionDashBoardN"
+        },
+        "pendingCount": {
+            "method": "GET",
+            "endpoint": "/admission/pendingCount"
+        },
+        "academicYears": {
+            "method": "GET",
+            "endpoint": "/admission/academic-years"
+        },
+        "startAdmission": {
+            "method": "POST",
+            "endpoint": "/admission/start-admission",
+            "body": {
+                "academicYear": "integer"
+            }
+        },
+        "stopAdmission": {
+            "method": "POST",
+            "endpoint": "/admission/stop-admission",
+            "body": {
+                "academicYear": "integer"
+            }
+        },
+        "getAddCapApp": {
+            "method": "GET",
+            "endpoint": "/admission/getaddCapApp"
+        },
+        "getCapAppById": {
+            "method": "GET",
+            "endpoint": "/admission/addCapApp/:stud_id"
+        },
+        "addCapApp": {
+            "method": "POST",
+            "endpoint": "/admission/addCapApp",
+            "body": {
+                "cap_application": "string",
+                "gr_number": "string",
+                "last_name": "string",
+                "first_name": "string",
+                "father_name": "string",
+                "mother_name": "string",
+                "cat": "string",
+                "seat_type": "string",
+                "round": "string",
+                "years": "string",
+                "branch": "string",
+                "email": "string",
+                "password": "string"
+            }
+        },
+        "applications": {
+            "method": "GET",
+            "endpoint": "/admission/applications?academicYear="
+        },
+        "signup": {
+            "method": "GET",
+            "endpoint": "/admission/signup?academicYear="
+        },
+        "revertCancel": {
+            "method": "POST",
+            "endpoint": "/admission/revert_cancel",
+            "body": {
+                "uid": "integer",
+                "academicYear": "integer"
+            }
+        },
+        "cancelledApplications": {
+            "method": "GET",
+            "endpoint": "/admission/cancelled_applications?academicYear="
+        },
+        "cancelledApplicationsReport": {
+            "method": "GET",
+            "endpoint": "/admission/cancelled_applications_report?academicYear="
+        }
+    }
+}
