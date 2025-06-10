@@ -53,7 +53,6 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: AppColors.background,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          // If width > 800, show row layout (like website), else stack vertically
           final isWide = constraints.maxWidth > 800;
           return Center(
             child: Container(
@@ -89,9 +88,17 @@ class _LoginPageState extends State<LoginPage> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 const SizedBox(height: 20),
-                                Image.asset(
-                                  'assets/logo.png',
-                                  height: 100,
+                                // Logo inside a white-background container
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: const EdgeInsets.all(8),
+                                  child: Image.asset(
+                                    'assets/logo.png',
+                                    height: 100,
+                                  ),
                                 ),
                                 const SizedBox(height: 20),
                                 Text(
@@ -130,9 +137,17 @@ class _LoginPageState extends State<LoginPage> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               const SizedBox(height: 20),
-                              Image.asset(
-                                'assets/logo.png',
-                                height: 80,
+                              // Logo inside a white-background container
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                padding: const EdgeInsets.all(8),
+                                child: Image.asset(
+                                  'assets/logo.png',
+                                  height: 80,
+                                ),
                               ),
                               const SizedBox(height: 16),
                               Text(
@@ -195,13 +210,13 @@ class _LoginPageState extends State<LoginPage> {
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text("Don't have an account? "),
-              TextButton(
-                onPressed: () {},
-                child: const Text('Sign Up'),
-              ),
-            ],
+            // children: [
+            //   const Text("Don't have an account? "),
+            //   TextButton(
+            //     onPressed: () {},
+            //     child: const Text('Sign Up'),
+            //   ),
+            // ],
           ),
           const SizedBox(height: 8),
           Center(
