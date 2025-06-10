@@ -1,4 +1,7 @@
+import 'package:erp_mobile_app/modules/auth/secure_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../auth/auth_service.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/colors.dart';
 import '../../core/constants/fonts.dart';
@@ -14,34 +17,59 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isLoading = false;
+  final _secureStorage = const FlutterSecureStorage();
+  final _authService = AuthService();
+  final _storageService = SecureStorageService();
 
-  void _handleLogin() {
-    if (_formKey.currentState!.validate()) {
-      final email = _emailController.text.trim();
-      final password = _passwordController.text.trim();
 
-      if (password != '12345678') {
-        _showError('Incorrect password!');
-        return;
+  void _handleLogin() async {
+  if (_formKey.currentState!.validate()) {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    setState(() => _isLoading = true);
+
+    final result = await _authService.login(email, password);
+
+    setState(() => _isLoading = false);
+
+    if (result != null && result['token'] != null && result['user_type'] != null) {
+      final token = result['token'];
+      final userType = result['user_type']; // Example: 'admission', 'hr', 'hod', 'faculty', 'student'
+
+      await _secureStorage.write(key: 'auth_token', value: token);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Login successful!')),
+        );
+
+      switch (userType) {
+        case 3:
+          context.go('/admission-dashboard');
+          break;
+        case 1:
+          context.go('/hr-dashboard');
+          break;
+        case 7:
+          context.go('/hod-dashboard');
+          break;
+        case 2:
+          context.go('/faculty-dashboard');
+          break;
+        case 4:
+          context.go('/student-dashboard');
+          break;
+        default:
+          _showError('Unknown user role.');
       }
-
-      if (email == 'admission@pvppcoe.ac.in') {
-        context.go('/admission-dashboard');
-      } else if (email == 'hr@pvppcoe.ac.in') {
-        context.go('/hr-dashboard');
-      } else if (email == 'hodcomps@pvppcoe.ac.in') {
-        context.go('/hod-dashboard');
-      } else if (email == 'facultydemo@pvppcoe.ac.in') {
-        context.go('/faculty-dashboard');
-      } else if (email == 'dummy11@gmail.com') {
-        context.go('/student-dashboard');
-      } else {
-        _showError('Invalid email for login.');
-      }
+    } else {
+      _showError('Login failed. Please check credentials.');
     }
   }
+}
 
-  void _showError(String message) {
+ void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
@@ -53,6 +81,7 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: AppColors.background,
       body: LayoutBuilder(
         builder: (context, constraints) {
+          // If width > 800, show row layout (like website), else stack vertically
           final isWide = constraints.maxWidth > 800;
           return Center(
             child: Container(
@@ -88,17 +117,9 @@ class _LoginPageState extends State<LoginPage> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 const SizedBox(height: 20),
-                                // Logo inside a white-background container
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  padding: const EdgeInsets.all(8),
-                                  child: Image.asset(
-                                    'assets/logo.png',
-                                    height: 100,
-                                  ),
+                                Image.asset(
+                                  'assets/logo.png',
+                                  height: 100,
                                 ),
                                 const SizedBox(height: 20),
                                 Text(
@@ -137,17 +158,9 @@ class _LoginPageState extends State<LoginPage> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               const SizedBox(height: 20),
-                              // Logo inside a white-background container
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                padding: const EdgeInsets.all(8),
-                                child: Image.asset(
-                                  'assets/logo.png',
-                                  height: 80,
-                                ),
+                              Image.asset(
+                                'assets/logo.png',
+                                height: 80,
                               ),
                               const SizedBox(height: 16),
                               Text(
@@ -198,25 +211,34 @@ class _LoginPageState extends State<LoginPage> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _handleLogin,
+              onPressed: _isLoading ? null: _handleLogin,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accent,
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
               ),
-              child: const Text('Login', style: TextStyle(color: Colors.white)),
+              child: _isLoading
+              ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.5,
+                  ),
+                )
+              : const Text('Login', style: TextStyle(color: Colors.white)),
             ),
           ),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            // children: [
-            //   const Text("Don't have an account? "),
-            //   TextButton(
-            //     onPressed: () {},
-            //     child: const Text('Sign Up'),
-            //   ),
-            // ],
+            children: [
+              const Text("Don't have an account? "),
+              TextButton(
+                onPressed: () {},
+                child: const Text('Sign Up'),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           Center(
