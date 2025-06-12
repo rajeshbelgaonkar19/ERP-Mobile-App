@@ -4,7 +4,12 @@ import 'core/themes/app_theme.dart';
 import 'config/app_routes.dart';
 
 void main() {
+<<<<<<< HEAD
   runApp(const ProviderScope(child: ERPApp()));
+=======
+  runApp(const ERPApp());
+  runApp(ProviderScope(child: ERPApp()));
+>>>>>>> f863c1580f330f6827e97bf8d1a5547db5c12d6d
 }
 
 class ERPApp extends StatelessWidget {

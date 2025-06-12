@@ -1,0 +1,41 @@
+[33mcommit 7a82c18cd8dc58b2693a47d5ecfce1b887ca32c3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: rajeshbelgaonkar19 <vu2f2223015@pvppcoe.ac.in>
+Date:   Thu Jun 12 17:12:48 2025 +0530
+
+    update on applications, api integration of dashboard more specifically!
+
+[33mcommit 7d477c2f85a91d61cc95fe466d35b7360e119638[m
+Author: rajeshbelgaonkar19 <vu2f2223015@pvppcoe.ac.in>
+Date:   Tue Jun 10 21:22:49 2025 +0530
+
+    master UI and dashboard api integration are done some!
+
+[33mcommit 6b66740aadcedc1c8cc03cbf7ae8505fccfcaff5[m
+Author: rajeshbelgaonkar19 <vu2f2223015@pvppcoe.ac.in>
+Date:   Tue Jun 10 17:50:14 2025 +0530
+
+    update header!
+
+[33mcommit 551ddaff2d6b9f7095a1434d00f4ca6e88047e8f[m
+Author: rajeshbelgaonkar19 <vu2f2223015@pvppcoe.ac.in>
+Date:   Tue Jun 10 12:58:43 2025 +0530
+
+    routing and dashborad basic setup with structured plan for future is done!
+
+[33mcommit 672dfe6079ffbe0c6b4fc6614b67d52d13063e36[m
+Author: rajeshbelgaonkar19 <vu2f2223015@pvppcoe.ac.in>
+Date:   Sun Jun 8 05:11:43 2025 +0530
+
+    update!
+
+[33mcommit e58433eb05bdea5ae7e9df38f0981b2b4e9b9004[m
+Author: rajeshbelgaonkar19 <vu2f2223015@pvppcoe.ac.in>
+Date:   Sun Jun 8 05:08:44 2025 +0530
+
+    Login Page Done!
+
+[33mcommit 0123dfe192acd12c1ad5111d05838c190e2d0783[m
+Author: rajeshbelgaonkar19 <vu2f2223015@pvppcoe.ac.in>
+Date:   Sun Jun 8 05:07:27 2025 +0530
+
+    first commit

@@ -4,15 +4,21 @@ import 'package:erp_mobile_app/modules/admission/applications/provider/admission
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+<<<<<<< HEAD
 // class ApplicationsPage extends StatelessWidget {
 //   const ApplicationsPage({super.key});
+=======
+>>>>>>> f863c1580f330f6827e97bf8d1a5547db5c12d6d
 class StudentAdmissionDetailsPage extends ConsumerWidget {
   final List<String> academicYears = ['2025-26', '2024-25', '2023-24', '2022-23', '2021-22'];
 
   @override
+<<<<<<< HEAD
   // Widget build(BuildContext context) {
   //   return const Center(
   //     child: Text('Applications Page'),
+=======
+>>>>>>> f863c1580f330f6827e97bf8d1a5547db5c12d6d
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedAcademicYear = ref.watch(selectedAcademicYearProvider);
     final applicationsAsync = ref.watch(studentApplicationsProvider);

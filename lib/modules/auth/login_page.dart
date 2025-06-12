@@ -1,4 +1,7 @@
+import 'package:erp_mobile_app/modules/auth/secure_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../auth/auth_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -22,8 +25,58 @@ class _LoginPageState extends State<LoginPage> {
   final _secureStorage = const FlutterSecureStorage();
   final _authService = AuthService();
   final _storageService = SecureStorageService();
+<<<<<<< HEAD
+=======
 
-  void _showError(String message) {
+
+  void _handleLogin() async {
+  if (_formKey.currentState!.validate()) {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    setState(() => _isLoading = true);
+
+    final result = await _authService.login(email, password);
+
+    setState(() => _isLoading = false);
+
+    if (result != null && result['token'] != null && result['user_type'] != null) {
+      final token = result['token'];
+      final userType = result['user_type']; // Example: 'admission', 'hr', 'hod', 'faculty', 'student'
+
+      await _secureStorage.write(key: 'auth_token', value: token);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Login successful!')),
+        );
+
+      switch (userType) {
+        case 3:
+          context.go('/admission-dashboard');
+          break;
+        case 1:
+          context.go('/hr-dashboard');
+          break;
+        case 7:
+          context.go('/hod-dashboard');
+          break;
+        case 2:
+          context.go('/faculty-dashboard');
+          break;
+        case 4:
+          context.go('/student-dashboard');
+          break;
+        default:
+          _showError('Unknown user role.');
+      }
+    } else {
+      _showError('Login failed. Please check credentials.');
+    }
+  }
+}
+>>>>>>> f863c1580f330f6827e97bf8d1a5547db5c12d6d
+
+ void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
@@ -90,6 +143,7 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: AppColors.background,
       body: LayoutBuilder(
         builder: (context, constraints) {
+          // If width > 800, show row layout (like website), else stack vertically
           final isWide = constraints.maxWidth > 800;
           return Center(
             child: Container(
@@ -111,6 +165,40 @@ class _LoginPageState extends State<LoginPage> {
                       children: [
                         Expanded(child: _buildLeftPanel()),
                         Expanded(
+<<<<<<< HEAD
+=======
+                          flex: 1,
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: AppColors.textPrimary,
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(16),
+                                bottomLeft: Radius.circular(16),
+                              ),
+                            ),
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const SizedBox(height: 20),
+                                Image.asset(
+                                  'assets/logo.png',
+                                  height: 100,
+                                ),
+                                const SizedBox(height: 20),
+                                Text(
+                                  "Vasantdada Patil Pratishthan's\nCollege of Engineering & Visual Arts",
+                                  style: AppFonts.headingStyle(Colors.white, fontSize: 18),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // Login form
+                        Expanded(
+                          flex: 1,
+>>>>>>> f863c1580f330f6827e97bf8d1a5547db5c12d6d
                           child: Padding(
                             padding: const EdgeInsets.all(32),
                             child: _buildLoginForm(),
@@ -120,7 +208,39 @@ class _LoginPageState extends State<LoginPage> {
                     )
                   : Column(
                       children: [
+<<<<<<< HEAD
                         _buildLeftPanel(isMobile: true),
+=======
+                        // Black box
+                        Container(
+                          width: double.infinity,
+                          decoration: const BoxDecoration(
+                            color: AppColors.textPrimary,
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(16),
+                              topRight: Radius.circular(16),
+                            ),
+                          ),
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const SizedBox(height: 20),
+                              Image.asset(
+                                'assets/logo.png',
+                                height: 80,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                "Vasantdada Patil Pratishthan's\nCollege of Engineering & Visual Arts",
+                                style: AppFonts.headingStyle(Colors.white, fontSize: 16),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Login form
+>>>>>>> f863c1580f330f6827e97bf8d1a5547db5c12d6d
                         Padding(
                           padding: const EdgeInsets.all(24),
                           child: _buildLoginForm(),
@@ -200,13 +320,18 @@ class _LoginPageState extends State<LoginPage> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
+<<<<<<< HEAD
               onPressed: _isLoading ? null : _handleLogin,
+=======
+              onPressed: _isLoading ? null: _handleLogin,
+>>>>>>> f863c1580f330f6827e97bf8d1a5547db5c12d6d
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accent,
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
               ),
               child: _isLoading
+<<<<<<< HEAD
                   ? const SizedBox(
                       width: 20,
                       height: 20,
@@ -220,6 +345,30 @@ class _LoginPageState extends State<LoginPage> {
           ),
           const SizedBox(height: 8),
           // Removed the "Don't have an account? Sign Up" row here
+=======
+              ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.5,
+                  ),
+                )
+              : const Text('Login', style: TextStyle(color: Colors.white)),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text("Don't have an account? "),
+              TextButton(
+                onPressed: () {},
+                child: const Text('Sign Up'),
+              ),
+            ],
+          ),
+>>>>>>> f863c1580f330f6827e97bf8d1a5547db5c12d6d
           const SizedBox(height: 8),
           Center(
             child: Text('www.getflytechnologies.com', style: AppFonts.bodyStyle(AppColors.textSecondary)),
