@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../auth/auth_service.dart';
 import '../../core/constants/colors.dart';
 import '../../core/constants/fonts.dart';
+import 'secure_storage.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,67 +18,70 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _storage = const FlutterSecureStorage();
-  final _dio = Dio(BaseOptions(
-    baseUrl: 'https://api.test.vppcoe.getflytechnologies.com/api',
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
-  ));
+  bool _isLoading = false;
+  final _secureStorage = const FlutterSecureStorage();
+  final _authService = AuthService();
+  final _storageService = SecureStorageService();
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
 
   void _handleLogin() async {
     if (_formKey.currentState!.validate()) {
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
 
+      setState(() => _isLoading = true);
+
       try {
-        final response = await _dio.post('/login', data: {
-          'email': email,
-          'password': password,
-        });
+        final result = await _authService.login(email, password);
 
-        final data = response.data;
-        final token = data['token'];
-        final userType = data['user_type'];
+        setState(() => _isLoading = false);
 
-        if (token == null || userType == null) {
-          _showError("Invalid response from server");
-          return;
-        }
+        if (result != null && result['token'] != null && result['user_type'] != null) {
+          final token = result['token'];
+          final userType = result['user_type'];
 
-        // Save token
-        await _storage.write(key: 'auth_token', value: token);
+          await _secureStorage.write(key: 'auth_token', value: token);
 
-        // Navigate based on role
-        switch (userType) {
-          case 3:
-            context.go('/admission-dashboard');
-            break;
-          case 1:
-            context.go('/hr-dashboard');
-            break;
-          case 7:
-            context.go('/hod-dashboard');
-            break;
-          case 2:
-            context.go('/faculty-dashboard');
-            break;
-          case 4:
-            context.go('/student-dashboard');
-            break;
-          default:
-            _showError('Unknown user type');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Login successful!')),
+          );
+
+          switch (userType) {
+            case 3:
+              context.go('/admission-dashboard');
+              break;
+            case 1:
+              context.go('/hr-dashboard');
+              break;
+            case 7:
+              context.go('/hod-dashboard');
+              break;
+            case 2:
+              context.go('/faculty-dashboard');
+              break;
+            case 4:
+              context.go('/student-dashboard');
+              break;
+            default:
+              _showError('Unknown user role.');
+          }
+        } else {
+          _showError('Login failed. Please check credentials.');
         }
       } on DioException catch (e) {
+        setState(() => _isLoading = false);
         final message = e.response?.data['message'] ?? 'Login failed';
         _showError(message);
+      } catch (e) {
+        setState(() => _isLoading = false);
+        _showError('An unexpected error occurred.');
       }
     }
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
   }
 
   @override
@@ -105,10 +110,12 @@ class _LoginPageState extends State<LoginPage> {
                   ? Row(
                       children: [
                         Expanded(child: _buildLeftPanel()),
-                        Expanded(child: Padding(
-                          padding: const EdgeInsets.all(32),
-                          child: _buildLoginForm(),
-                        )),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(32),
+                            child: _buildLoginForm(),
+                          ),
+                        ),
                       ],
                     )
                   : Column(
@@ -145,9 +152,9 @@ class _LoginPageState extends State<LoginPage> {
           Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
             ),
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(12),
             child: Image.asset(
               'assets/logo.png',
               height: isMobile ? 80 : 100,
@@ -172,7 +179,10 @@ class _LoginPageState extends State<LoginPage> {
         children: [
           Text('Login', style: AppFonts.headingStyle(AppColors.textPrimary)),
           const SizedBox(height: 8),
-          Text('Welcome to Acadamate. Please login for an account.', style: AppFonts.bodyStyle(AppColors.textSecondary)),
+          Text(
+            'Welcome to Acadamate. Please login for an account.',
+            style: AppFonts.bodyStyle(AppColors.textSecondary),
+          ),
           const SizedBox(height: 20),
           TextFormField(
             controller: _emailController,
@@ -190,16 +200,26 @@ class _LoginPageState extends State<LoginPage> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _handleLogin,
+              onPressed: _isLoading ? null : _handleLogin,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.accent,
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
               ),
-              child: const Text('Login', style: TextStyle(color: Colors.white)),
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.5,
+                      ),
+                    )
+                  : const Text('Login', style: TextStyle(color: Colors.white)),
             ),
           ),
           const SizedBox(height: 8),
+          // Removed the "Don't have an account? Sign Up" row here
           const SizedBox(height: 8),
           Center(
             child: Text('www.getflytechnologies.com', style: AppFonts.bodyStyle(AppColors.textSecondary)),

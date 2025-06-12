@@ -14,7 +14,7 @@ class HeaderNav extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        toolbarHeight: isSmallScreen ? 180 : 145,
+        toolbarHeight: isSmallScreen ? 120 : 90, // Reduced height
         automaticallyImplyLeading: false,
         flexibleSpace: _buildHeader(context, isSmallScreen),
       ),
@@ -24,7 +24,7 @@ class HeaderNav extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context, bool isSmallScreen) {
     return Container(
-      margin: const EdgeInsets.all(8),
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Reduced margin
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF160747), Color(0xFF2A1070)],
@@ -41,50 +41,50 @@ class HeaderNav extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // Reduced padding
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                if (isSmallScreen) // Only show drawer icon on small screens here
+                if (isSmallScreen)
                   Builder(
                     builder: (context) => IconButton(
                       icon: const Icon(Icons.menu, color: Colors.white),
                       onPressed: () => Scaffold.of(context).openDrawer(),
                     ),
                   ),
-                Image.asset('assets/image.png', height: 36),
-                const SizedBox(width: 8),
+                Image.asset('assets/image.png', height: 32), // Slightly smaller logo
+                const SizedBox(width: 6),
                 const Text(
                   'Academate',
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
                 if (!isSmallScreen) ...[
-                  const SizedBox(width: 32),
+                  const SizedBox(width: 20),
                   _navItem(context, 'Dashboard', '/admission-dashboard'),
                   _navItem(context, 'Applications', '/applications'),
                   _dropdownNav(context),
                   _navItem(context, 'Cancelled Applications', '/cancelled-apps'),
-                const Spacer(), // Pushes logout button to the right
-                ElevatedButton.icon(
-                  onPressed: () => context.go('/'),
-                  icon: const Icon(Icons.logout, color: Colors.white),
-                  label: const Text('Logout', style: TextStyle(color: Colors.white)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  const Spacer(),
+                  ElevatedButton.icon(
+                    onPressed: () => context.go('/'),
+                    icon: const Icon(Icons.logout, color: Colors.white),
+                    label: const Text('Logout', style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    ),
                   ),
-                ),
                 ],
               ],
             ),
           ),
           const Divider(height: 1, color: Colors.deepPurpleAccent),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4), // Reduced padding
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -92,15 +92,15 @@ class HeaderNav extends StatelessWidget {
                   'Admission',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 Row(
                   children: const [
-                    Icon(Icons.calendar_today_outlined, size: 16, color: Colors.white),
-                    SizedBox(width: 6),
-                    Text('10 June 2025', style: TextStyle(color: Colors.white)),
+                    Icon(Icons.calendar_today_outlined, size: 15, color: Colors.white),
+                    SizedBox(width: 4),
+                    Text('10 June 2025', style: TextStyle(color: Colors.white, fontSize: 14)),
                   ],
                 ),
               ],

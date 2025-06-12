@@ -42,7 +42,8 @@ class AppRouter {
       ),
       GoRoute(
         path: '/applications',
-        builder: (context, state) => _withHeaderNav(const ApplicationsPage()),
+        // builder: (context, state) => _withHeaderNav(const ApplicationsPage()),
+        builder: (context, state) => _withHeaderNav(StudentAdmissionDetailsPage()),
       ),
       GoRoute(
         path: '/cancelled-apps',

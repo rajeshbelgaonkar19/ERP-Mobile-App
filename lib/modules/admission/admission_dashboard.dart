@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'dart:math' as math;
 import '../../../services/api/admission/admission_provider.dart';
 
 // Add these providers at the top of your file or in a providers.dart
@@ -30,6 +31,24 @@ class AdmissionDashboard extends ConsumerWidget {
           final branchStats = data['branchStats'] ?? [];
           final categoryStats = data['categoryStats'] ?? [];
           final cutOffTrend = data['cutOffTrend'] ?? [];
+
+          final engineeringYears = data['engineeringYears'] ?? [];
+          final selectedYearData = engineeringYears.firstWhere(
+            (e) => e['year_name'] == selectedYear,
+            orElse: () => engineeringYears.isNotEmpty ? engineeringYears.first : {},
+          );
+
+          final totalApplications = selectedYearData['application_count'] ?? 0;
+          final completedApplications = selectedYearData['completed'] ?? 0;
+          final pendingApplications = selectedYearData['pending'] ?? 0;
+          final cancelledApplications = selectedYearData['cancelled'] ?? 0;
+          final maxApplications = engineeringYears.fold<int>(
+            0,
+            (max, e) => math.max(
+              max,
+              int.tryParse(e['application_count'].toString()) ?? 0,
+            ),
+          );
 
           final filteredAcademicYear = selectedYear == null
               ? academicYears
@@ -63,19 +82,33 @@ class AdmissionDashboard extends ConsumerWidget {
                     child: Column(
                       children: [
                         const Text("Year wise Application Status", style: TextStyle(fontWeight: FontWeight.bold)),
-                        SizedBox(
-                          height: 180,
-                          child: PieChart(
-                            PieChartData(
-                              sections: filteredAcademicYear.map<PieChartSectionData>((e) {
-                                final value = e['application_count'];
-                                return PieChartSectionData(
-                                  value: double.tryParse(value.toString()) ?? 0,
-                                  title: e['academic_name'],
-                                );
-                              }).toList(),
-                            ),
-                          ),
+                        const SizedBox(height: 12),
+                        // Dropdown for Engineering Year (uses engineeringYears from API)
+                        DropdownButton<String>(
+                          value: selectedYear ?? (engineeringYears.isNotEmpty ? engineeringYears.first['year_name'] : null),
+                          hint: const Text('Select Year'),
+                          items: engineeringYears.map<DropdownMenuItem<String>>((e) {
+                            return DropdownMenuItem<String>(
+                              value: e['year_name'] as String,
+                              child: Text(e['year_name'].toString()),
+                            );
+                          }).toList(),
+                          onChanged: (value) => ref.read(selectedYearProvider.notifier).state = value,
+                        ),
+                        const SizedBox(height: 16),
+                        // Gauge
+                        SemiCircleGauge(
+                          value: totalApplications,
+                          max: maxApplications > 0 ? maxApplications : 1, // avoid divide by zero
+                        ),
+                        const SizedBox(height: 16),
+                        // Status counts
+                        Column(
+                          children: [
+                            Text('Completed Applications: $completedApplications', style: const TextStyle(fontSize: 16)),
+                            Text('Pending Applications: $pendingApplications', style: const TextStyle(fontSize: 16)),
+                            Text('Cancelled Applications: $cancelledApplications', style: const TextStyle(fontSize: 16)),
+                          ],
                         ),
                       ],
                     ),
@@ -245,4 +278,63 @@ class AdmissionDashboard extends ConsumerWidget {
       ),
     );
   }
+}
+
+// Add this widget in your file (outside the class)
+class SemiCircleGauge extends StatelessWidget {
+  final int value;
+  final int max;
+  final Color color;
+  const SemiCircleGauge({super.key, required this.value, required this.max, this.color = Colors.yellow});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: const Size(200, 100),
+      painter: _SemiCircleGaugePainter(value: value, max: max, color: color),
+      child: SizedBox(
+        width: 200,
+        height: 100,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '$value',
+                style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              ),
+              const Text('Total Applications'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SemiCircleGaugePainter extends CustomPainter {
+  final int value;
+  final int max;
+  final Color color;
+  _SemiCircleGaugePainter({required this.value, required this.max, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height * 2);
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 16
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    // Draw background arc
+    canvas.drawArc(rect, math.pi, math.pi, false, paint..color = color.withOpacity(0.2));
+
+    // Draw value arc
+    final sweep = (value / (max == 0 ? 1 : max)) * math.pi;
+    canvas.drawArc(rect, math.pi, sweep, false, paint..color = color);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
