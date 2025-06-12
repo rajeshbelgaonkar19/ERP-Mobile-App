@@ -14,8 +14,4 @@ class SecureStorageService {
   Future<void> clearToken() async {
     await _storage.delete(key: 'auth_token');
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> f863c1580f330f6827e97bf8d1a5547db5c12d6d

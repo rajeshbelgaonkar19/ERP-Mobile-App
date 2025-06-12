@@ -42,10 +42,6 @@ class AppRouter {
       ),
       GoRoute(
         path: '/applications',
-<<<<<<< HEAD
-        // builder: (context, state) => _withHeaderNav(const ApplicationsPage()),
-=======
->>>>>>> f863c1580f330f6827e97bf8d1a5547db5c12d6d
         builder: (context, state) => _withHeaderNav(StudentAdmissionDetailsPage()),
       ),
       GoRoute(

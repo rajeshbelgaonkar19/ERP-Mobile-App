@@ -21,8 +21,4 @@ final studentApplicationsProvider = FutureProvider.autoDispose<List<StudentAppli
   final service = ref.watch(admissionServiceProvider);
 
   return service.fetchApplications(academicId);
-<<<<<<< HEAD
 });
-=======
-});
->>>>>>> f863c1580f330f6827e97bf8d1a5547db5c12d6d

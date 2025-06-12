@@ -23,90 +23,98 @@ class HeaderNav extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, bool isSmallScreen) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Reduced margin
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF160747), Color(0xFF2A1070)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // Reduced padding
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (isSmallScreen)
-                  Builder(
-                    builder: (context) => IconButton(
-                      icon: const Icon(Icons.menu, color: Colors.white),
-                      onPressed: () => Scaffold.of(context).openDrawer(),
-                    ),
-                  ),
-                Image.asset('assets/image.png', height: 32), // Slightly smaller logo
-                const SizedBox(width: 6),
-                const Text(
-                  'Academate',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                if (!isSmallScreen) ...[
-                  const SizedBox(width: 20),
-                  _navItem(context, 'Dashboard', '/admission-dashboard'),
-                  _navItem(context, 'Applications', '/applications'),
-                  _dropdownNav(context),
-                  _navItem(context, 'Cancelled Applications', '/cancelled-apps'),
-                  const Spacer(),
-                  ElevatedButton.icon(
-                    onPressed: () => context.go('/'),
-                    icon: const Icon(Icons.logout, color: Colors.white),
-                    label: const Text('Logout', style: TextStyle(color: Colors.white)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    ),
-                  ),
-                ],
-              ],
-            ),
+    final double headerHeight = isSmallScreen ? 120 : 90;
+    return SizedBox(
+      height: headerHeight,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF160747), Color(0xFF2A1070)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
           ),
-          const Divider(height: 1, color: Colors.deepPurpleAccent),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4), // Reduced padding
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Admission',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Row(
-                  children: const [
-                    Icon(Icons.calendar_today_outlined, size: 15, color: Colors.white),
-                    SizedBox(width: 4),
-                    Text('10 June 2025', style: TextStyle(color: Colors.white, fontSize: 14)),
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: isSmallScreen ? 60 : 56,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (isSmallScreen)
+                      Builder(
+                        builder: (context) => IconButton(
+                          icon: const Icon(Icons.menu, color: Colors.white),
+                          onPressed: () => Scaffold.of(context).openDrawer(),
+                        ),
+                      ),
+                    Image.asset('assets/image.png', height: 32),
+                    const SizedBox(width: 6),
+                    const Text(
+                      'Academate',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    if (!isSmallScreen) ...[
+                      const SizedBox(width: 20),
+                      _navItem(context, 'Dashboard', '/admission-dashboard'),
+                      _navItem(context, 'Applications', '/applications'),
+                      _dropdownNav(context),
+                      _navItem(context, 'Cancelled Applications', '/cancelled-apps'),
+                      const Spacer(),
+                      ElevatedButton.icon(
+                        onPressed: () => context.go('/'),
+                        icon: const Icon(Icons.logout, color: Colors.white),
+                        label: const Text('Logout', style: TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
+            const Divider(height: 1, color: Colors.deepPurpleAccent),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Admission',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Row(
+                      children: const [
+                        Icon(Icons.calendar_today_outlined, size: 15, color: Colors.white),
+                        SizedBox(width: 4),
+                        Text('10 June 2025', style: TextStyle(color: Colors.white, fontSize: 14)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
