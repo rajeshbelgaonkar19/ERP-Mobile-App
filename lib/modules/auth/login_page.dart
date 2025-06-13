@@ -1,14 +1,13 @@
-import 'package:erp_mobile_app/modules/auth/secure_storage.dart';
+// import 'package:erp_mobile_app/modules/auth/secure_storage.dart';
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../auth/auth_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
-// import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-// import '../auth/auth_service.dart';
 import '../../core/constants/colors.dart';
 import '../../core/constants/fonts.dart';
-import '../auth/secure_storage.dart';
+// import '../auth/secure_storage.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -24,7 +23,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
   final _secureStorage = const FlutterSecureStorage();
   final _authService = AuthService();
-  final _storageService = SecureStorageService();
+  // final _storageService = SecureStorageService();
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -53,6 +52,8 @@ class _LoginPageState extends State<LoginPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Login successful!')),
           );
+
+          log("mmm$userType");
 
           switch (userType) {
             case 3:
@@ -176,59 +177,61 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _buildLoginForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Login', style: AppFonts.headingStyle(AppColors.textPrimary)),
-          const SizedBox(height: 8),
-          Text(
-            'Welcome to Acadamate. Please login for an account.',
-            style: AppFonts.bodyStyle(AppColors.textSecondary),
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            controller: _emailController,
-            decoration: const InputDecoration(labelText: 'Email address'),
-            validator: (value) => value == null || value.isEmpty ? 'Please enter your email' : null,
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _passwordController,
-            obscureText: true,
-            decoration: const InputDecoration(labelText: 'Password'),
-            validator: (value) => value == null || value.isEmpty ? 'Please enter your password' : null,
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : _handleLogin,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-              ),
-              child: _isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2.5,
-                      ),
-                    )
-                  : const Text('Login', style: TextStyle(color: Colors.white)),
+    return SingleChildScrollView(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Login', style: AppFonts.headingStyle(AppColors.textPrimary)),
+            const SizedBox(height: 8),
+            Text(
+              'Welcome to Acadamate. Please login for an account.',
+              style: AppFonts.bodyStyle(AppColors.textSecondary),
             ),
-          ),
-          const SizedBox(height: 8),
-          // Removed the "Don't have an account? Sign Up" row here
-          const SizedBox(height: 8),
-          Center(
-            child: Text('www.getflytechnologies.com', style: AppFonts.bodyStyle(AppColors.textSecondary)),
-          ),
-        ],
+            const SizedBox(height: 20),
+            TextFormField(
+              controller: _emailController,
+              decoration: const InputDecoration(labelText: 'Email address'),
+              validator: (value) => value == null || value.isEmpty ? 'Please enter your email' : null,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Password'),
+              validator: (value) => value == null || value.isEmpty ? 'Please enter your password' : null,
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _handleLogin,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2.5,
+                        ),
+                      )
+                    : const Text('Login', style: TextStyle(color: Colors.white)),
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Removed the "Don't have an account? Sign Up" row here
+            const SizedBox(height: 8),
+            Center(
+              child: Text('www.getflytechnologies.com', style: AppFonts.bodyStyle(AppColors.textSecondary)),
+            ),
+          ],
+        ),
       ),
     );
   }

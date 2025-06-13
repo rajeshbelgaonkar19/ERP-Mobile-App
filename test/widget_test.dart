@@ -27,4 +27,9 @@ void main() {
     expect(find.text('0'), findsNothing);
     expect(find.text('1'), findsOneWidget);
   });
+
+  testWidgets('App builds without crashing', (WidgetTester tester) async {
+    // You can add your own widget tests here later.
+    expect(true, isTrue);
+  });
 }

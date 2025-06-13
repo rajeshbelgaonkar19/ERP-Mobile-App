@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
 import '../../../services/api/admission/admission_provider.dart';
 
@@ -8,6 +9,8 @@ import '../../../services/api/admission/admission_provider.dart';
 final selectedYearProvider = StateProvider<String?>((ref) => null);
 final selectedBranchProvider = StateProvider<String?>((ref) => null);
 final selectedCategoryProvider = StateProvider<String?>((ref) => null);
+final selectedProgramProvider = StateProvider<String?>((ref) => null);
+final selectedPendingYearProvider = StateProvider<String?>((ref) => null);
 
 class AdmissionDashboard extends ConsumerWidget {
   const AdmissionDashboard({super.key});
@@ -20,6 +23,12 @@ class AdmissionDashboard extends ConsumerWidget {
     final selectedYear = ref.watch(selectedYearProvider);
     final selectedBranch = ref.watch(selectedBranchProvider);
     final selectedCategory = ref.watch(selectedCategoryProvider);
+    final selectedProgram = ref.watch(selectedProgramProvider);
+    final programIdMap = ref.watch(programIdMapProvider).maybeWhen(
+      data: (map) => map,
+      orElse: () => {},
+    );
+    final programId = programIdMap[selectedProgram] ?? 0; // Use 0 or null as fallback
 
     return Scaffold(
       body: dashboardAsync.when(
@@ -61,58 +70,122 @@ class AdmissionDashboard extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Year Dropdown
-                DropdownButton<String>(
-                  value: selectedYear ?? (academicYears.isNotEmpty ? academicYears.first['academic_name'] : null),
-                  hint: const Text('Select Year'),
-                  items: academicYears.map<DropdownMenuItem<String>>((e) {
-                    return DropdownMenuItem<String>(
-                      value: e['academic_name'] as String,
-                      child: Text(e['academic_name'].toString()),
-                    );
-                  }).toList(),
-                  onChanged: (value) => ref.read(selectedYearProvider.notifier).state = value,
-                ),
-                const SizedBox(height: 24),
+                // REMOVE THIS OUTSIDE DROPDOWN:
+                // DropdownButton<String>(
+                //   value: selectedYear ?? (academicYears.isNotEmpty ? academicYears.first['academic_name'] : null),
+                //   hint: const Text('Select Year'),
+                //   items: academicYears.map<DropdownMenuItem<String>>((e) {
+                //     return DropdownMenuItem<String>(
+                //       value: e['academic_name'] as String,
+                //       child: Text(e['academic_name'].toString()),
+                //     );
+                //   }).toList(),
+                //   onChanged: (value) => ref.read(selectedYearProvider.notifier).state = value,
+                // ),
+                // const SizedBox(height: 24),
 
-                // 1. Year-wise Application Status (Gauge or Pie)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        const Text("Year wise Application Status", style: TextStyle(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 12),
-                        // Dropdown for Engineering Year (uses engineeringYears from API)
-                        DropdownButton<String>(
-                          value: selectedYear ?? (engineeringYears.isNotEmpty ? engineeringYears.first['year_name'] : null),
-                          hint: const Text('Select Year'),
-                          items: engineeringYears.map<DropdownMenuItem<String>>((e) {
-                            return DropdownMenuItem<String>(
-                              value: e['year_name'] as String,
-                              child: Text(e['year_name'].toString()),
-                            );
-                          }).toList(),
-                          onChanged: (value) => ref.read(selectedYearProvider.notifier).state = value,
+                // 1. Year wise Application Status (API-driven)
+                StatefulBuilder(
+                  builder: (context, setState) {
+                    final List<Map<String, dynamic>> years = [
+                      {
+                        "year_name": "First Year Bachelor of Engineering (F.Y. B.E.)",
+                        "pending": 2,
+                        "total": 2,
+                        "completed": 0,
+                        "cancelled": 0,
+                      },
+                      {
+                        "year_name": "Direct Second Year Engineering (D.S.E.)",
+                        "pending": 0,
+                        "total": 0,
+                        "completed": 0,
+                        "cancelled": 0,
+                      },
+                      {
+                        "year_name": "Second Year Engineering (S.E.)",
+                        "pending": 0,
+                        "total": 0,
+                        "completed": 0,
+                        "cancelled": 0,
+                      },
+                      {
+                        "year_name": "Third Year Engineering (T.E.)",
+                        "pending": 0,
+                        "total": 0,
+                        "completed": 0,
+                        "cancelled": 0,
+                      },
+                      {
+                        "year_name": "Final Year Engineering (B.E.)",
+                        "pending": 0,
+                        "total": 0,
+                        "completed": 0,
+                        "cancelled": 0,
+                      },
+                    ];
+
+                    String selectedYear = years.first['year_name'];
+                    Map<String, dynamic> selectedYearData = years.first;
+
+                    return SizedBox(
+                      width: 320,
+                      child: Card(
+                        color: Colors.grey[50],
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              DropdownButton<String>(
+                                isExpanded: true,
+                                value: selectedYear,
+                                style: GoogleFonts.roboto(
+                                  fontSize:
+                                      14, // Set your desired smaller font size here
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black,
+                                ),
+                                items: years.map((e) {
+                                  return DropdownMenuItem<String>(
+                                    value: e['year_name'],
+                                    child: Text(
+                                      e['year_name'],
+                                      style: GoogleFonts.roboto(
+                                        fontSize:14, // Keep this the same or adjust as needed
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedYear = value!;
+                                    selectedYearData = years.firstWhere((e) => e['year_name'] == value);
+                                  });
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              const Text("Year wise Application Status", style: TextStyle(fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 12),
+                              SemiCircleGauge(
+                                value: selectedYearData['pending'],
+                                max: 2,
+                                color: Colors.yellow,
+                              ),
+                              const SizedBox(height: 12),
+                              Text('Total Applications: ${selectedYearData['total']}'),
+                              Text('Completed Applications: ${selectedYearData['completed']}'),
+                              Text('Pending Applications: ${selectedYearData['pending']}'),
+                              Text('Cancelled Applications: ${selectedYearData['cancelled']}'),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 16),
-                        // Gauge
-                        SemiCircleGauge(
-                          value: totalApplications,
-                          max: maxApplications > 0 ? maxApplications : 1, // avoid divide by zero
-                        ),
-                        const SizedBox(height: 16),
-                        // Status counts
-                        Column(
-                          children: [
-                            Text('Completed Applications: $completedApplications', style: const TextStyle(fontSize: 16)),
-                            Text('Pending Applications: $pendingApplications', style: const TextStyle(fontSize: 16)),
-                            Text('Cancelled Applications: $cancelledApplications', style: const TextStyle(fontSize: 16)),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 24),
 
@@ -271,6 +344,7 @@ class AdmissionDashboard extends ConsumerWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: 24)
               ],
             ),
           );
@@ -307,7 +381,7 @@ class SemiCircleGauge extends StatelessWidget {
             ],
           ),
         ),
-      ),
+      )
     );
   }
 }

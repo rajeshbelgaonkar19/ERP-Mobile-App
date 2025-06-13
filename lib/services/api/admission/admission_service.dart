@@ -15,13 +15,8 @@ class AdmissionService {
   }
 
   Future<List<dynamic>> getPrograms() async {
-    try {
-      final response = await _dio.get('/admission/getProgram');
-      return response.data['program'];
-    } on DioException catch (e) {
-      _handleDioError(e);
-      rethrow;
-    }
+    final response = await _dio.get('/admission/getProgram');
+    return response.data['program'] as List<dynamic>;
   }
 
   Future<List<dynamic>> getCategories() async {
@@ -52,6 +47,12 @@ class AdmissionService {
       _handleDioError(e);
       rethrow;
     }
+  }
+
+  Future<Map<String, dynamic>> getPendingCount() async {
+    final response = await _dio.get('/admission/pendingCount');
+    // API returns a list with one map
+    return (response.data as List).first as Map<String, dynamic>;
   }
 
   void _handleDioError(DioException e) {
