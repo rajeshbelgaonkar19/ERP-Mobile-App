@@ -1,16 +1,15 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'dart:math' as math;
 import '../../../services/api/admission/admission_provider.dart';
 
-// Add these providers at the top of your file or in a providers.dart
-final selectedYearProvider = StateProvider<String?>((ref) => null);
+// Providers for dropdown selections
+final selectedProgramProvider = StateProvider<String?>((ref) => null);
 final selectedBranchProvider = StateProvider<String?>((ref) => null);
 final selectedCategoryProvider = StateProvider<String?>((ref) => null);
-final selectedProgramProvider = StateProvider<String?>((ref) => null);
-final selectedPendingYearProvider = StateProvider<String?>((ref) => null);
+
+final _selectedCategoryProvider = StateProvider<String>((ref) => 'OPEN');
 
 class AdmissionDashboard extends ConsumerWidget {
   const AdmissionDashboard({super.key});
@@ -18,17 +17,11 @@ class AdmissionDashboard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboardAsync = ref.watch(admissionDashboardProvider);
+    final branchesAsync = ref.watch(admissionBranchesProvider);
 
-    // In your build method, before the charts:
-    final selectedYear = ref.watch(selectedYearProvider);
+    final selectedProgram = ref.watch(selectedProgramProvider);
     final selectedBranch = ref.watch(selectedBranchProvider);
     final selectedCategory = ref.watch(selectedCategoryProvider);
-    final selectedProgram = ref.watch(selectedProgramProvider);
-    final programIdMap = ref.watch(programIdMapProvider).maybeWhen(
-      data: (map) => map,
-      orElse: () => {},
-    );
-    final programId = programIdMap[selectedProgram] ?? 0; // Use 0 or null as fallback
 
     return Scaffold(
       body: dashboardAsync.when(
@@ -36,317 +29,602 @@ class AdmissionDashboard extends ConsumerWidget {
         error: (err, _) => Center(child: Text("Error: $err")),
         data: (data) {
           final genderStats = data['genderCount'] ?? [];
-          final academicYears = data['academicYears'] ?? [];
           final branchStats = data['branchStats'] ?? [];
-          final categoryStats = data['categoryStats'] ?? [];
+          final categoryStats = (data['categoryStats'] ?? []) as List;
           final cutOffTrend = data['cutOffTrend'] ?? [];
 
-          final engineeringYears = data['engineeringYears'] ?? [];
-          final selectedYearData = engineeringYears.firstWhere(
-            (e) => e['year_name'] == selectedYear,
-            orElse: () => engineeringYears.isNotEmpty ? engineeringYears.first : {},
+          // Program Dropdown (Year-wise)
+          final programDropdownValue = selectedProgram ?? (genderStats.isNotEmpty ? genderStats.first['programm_name'] : null);
+
+          // Category Dropdown
+          final categoryDropdownValue = selectedCategory ?? (categoryStats.isNotEmpty ? categoryStats.first['category_name'] : null);
+
+          // Filtered genderStats for selected program
+          final selectedProgramData = genderStats.firstWhere(
+            (e) => e['programm_name'] == programDropdownValue,
+            orElse: () => genderStats.isNotEmpty ? genderStats.first : {},
           );
 
-          final totalApplications = selectedYearData['application_count'] ?? 0;
-          final completedApplications = selectedYearData['completed'] ?? 0;
-          final pendingApplications = selectedYearData['pending'] ?? 0;
-          final cancelledApplications = selectedYearData['cancelled'] ?? 0;
-          final maxApplications = engineeringYears.fold<int>(
-            0,
-            (max, e) => math.max(
-              max,
-              int.tryParse(e['application_count'].toString()) ?? 0,
-            ),
-          );
+          final male = int.tryParse(selectedProgramData['male_count']?.toString() ?? '0') ?? 0;
+          final female = int.tryParse(selectedProgramData['female_count']?.toString() ?? '0') ?? 0;
+          final total = male + female;
 
-          final filteredAcademicYear = selectedYear == null
-              ? academicYears
-              : academicYears.where((e) => e['academic_name'] == selectedYear).toList();
-          final filteredBranchStats = branchStats.where((e) => e['branch_name'] == selectedBranch).toList();
-          final filteredCategoryStats = categoryStats.where((e) => e['category_name'] == selectedCategory).toList();
+          final screenWidth = MediaQuery.of(context).size.width;
+          final cardWidth = screenWidth * 0.95;
+          final chartSize = screenWidth * 0.7;
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // REMOVE THIS OUTSIDE DROPDOWN:
-                // DropdownButton<String>(
-                //   value: selectedYear ?? (academicYears.isNotEmpty ? academicYears.first['academic_name'] : null),
-                //   hint: const Text('Select Year'),
-                //   items: academicYears.map<DropdownMenuItem<String>>((e) {
-                //     return DropdownMenuItem<String>(
-                //       value: e['academic_name'] as String,
-                //       child: Text(e['academic_name'].toString()),
-                //     );
-                //   }).toList(),
-                //   onChanged: (value) => ref.read(selectedYearProvider.notifier).state = value,
-                // ),
-                // const SizedBox(height: 24),
+          return branchesAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, _) => Center(child: Text("Error: $err")),
+            data: (branches) {
+              // Branch Dropdown
+              final branchDropdownValue = selectedBranch ?? (branches.isNotEmpty ? branches.first['bname'] : null);
 
-                // 1. Year wise Application Status (API-driven)
-                StatefulBuilder(
-                  builder: (context, setState) {
-                    final List<Map<String, dynamic>> years = [
-                      {
-                        "year_name": "First Year Bachelor of Engineering (F.Y. B.E.)",
-                        "pending": 2,
-                        "total": 2,
-                        "completed": 0,
-                        "cancelled": 0,
-                      },
-                      {
-                        "year_name": "Direct Second Year Engineering (D.S.E.)",
-                        "pending": 0,
-                        "total": 0,
-                        "completed": 0,
-                        "cancelled": 0,
-                      },
-                      {
-                        "year_name": "Second Year Engineering (S.E.)",
-                        "pending": 0,
-                        "total": 0,
-                        "completed": 0,
-                        "cancelled": 0,
-                      },
-                      {
-                        "year_name": "Third Year Engineering (T.E.)",
-                        "pending": 0,
-                        "total": 0,
-                        "completed": 0,
-                        "cancelled": 0,
-                      },
-                      {
-                        "year_name": "Final Year Engineering (B.E.)",
-                        "pending": 0,
-                        "total": 0,
-                        "completed": 0,
-                        "cancelled": 0,
-                      },
-                    ];
+              // Find branchStats for selected branch
+              final filteredBranchStats = branchStats.where((e) =>
+                branchDropdownValue == null || e['branch_name'] == branchDropdownValue
+              ).toList();
 
-                    String selectedYear = years.first['year_name'];
-                    Map<String, dynamic> selectedYearData = years.first;
+              // Branch Student Count
+              int branchStudentCount = 0;
+              if (filteredBranchStats.isNotEmpty) {
+                branchStudentCount = int.tryParse(filteredBranchStats.first['application_count']?.toString() ?? '0') ?? 0;
+              }
 
-                    return SizedBox(
-                      width: 320,
+              // Filter only if categoryStats is not empty
+              final filteredCategoryStats = categoryStats.isNotEmpty
+                  ? categoryStats.where((e) =>
+                      categoryDropdownValue == null || e['category_name'] == categoryDropdownValue
+                    ).toList()
+                  : [];
+
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    //1. Program/Year Dropdown (for 1st chart)
+                    DropdownButton<String>(
+                      value: programDropdownValue,
+                      hint: const Text('Select Program/Year'),
+                      isExpanded: true,
+                      items: genderStats.map<DropdownMenuItem<String>>((e) {
+                        return DropdownMenuItem<String>(
+                          value: e['programm_name'],
+                          child: Text(e['programm_name'].toString()),
+                        );
+                      }).toList(),
+                      onChanged: (value) => ref.read(selectedProgramProvider.notifier).state = value,
+                    ),
+                    const SizedBox(height: 16),
+
+                    //1. Responsive Card for 1st chart properly done
+                    Center(
                       child: Card(
-                        color: Colors.grey[50],
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 2,
+                        child: Container(
+                          width: cardWidth,
+                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
                           child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              DropdownButton<String>(
-                                isExpanded: true,
-                                value: selectedYear,
-                                style: GoogleFonts.roboto(
-                                  fontSize:
-                                      14, // Set your desired smaller font size here
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black,
-                                ),
-                                items: years.map((e) {
-                                  return DropdownMenuItem<String>(
-                                    value: e['year_name'],
-                                    child: Text(
-                                      e['year_name'],
-                                      style: GoogleFonts.roboto(
-                                        fontSize:14, // Keep this the same or adjust as needed
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.black,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  );
-                                }).toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    selectedYear = value!;
-                                    selectedYearData = years.firstWhere((e) => e['year_name'] == value);
-                                  });
-                                },
-                              ),
-                              const SizedBox(height: 16),
                               const Text("Year wise Application Status", style: TextStyle(fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 12),
-                              SemiCircleGauge(
-                                value: selectedYearData['pending'],
-                                max: 2,
-                                color: Colors.yellow,
+                              SizedBox(
+                                height: chartSize,
+                                width: chartSize,
+                                child: DualSemiCircleGauge(
+                                  male: male,
+                                  female: female,
+                                  total: total,
+                                ),
                               ),
-                              const SizedBox(height: 12),
-                              Text('Total Applications: ${selectedYearData['total']}'),
-                              Text('Completed Applications: ${selectedYearData['completed']}'),
-                              Text('Pending Applications: ${selectedYearData['pending']}'),
-                              Text('Cancelled Applications: ${selectedYearData['cancelled']}'),
+                              // Move text closer to chart
+                              const SizedBox(height: 4),
+                              Text('$total', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+                              const Text('Total Applications'),
+                              const SizedBox(height: 4),
+                              Text('Male: $male'),
+                              Text('Female: $female'),
                             ],
                           ),
                         ),
                       ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 24),
-
-                // 2. Branch-wise Admission Status (Pie)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        const Text("Branch wise Admission Status", style: TextStyle(fontWeight: FontWeight.bold)),
-                        SizedBox(
-                          height: 180,
-                          child: PieChart(
-                            PieChartData(
-                              sections: branchStats.map<PieChartSectionData>((e) {
-                                final value = e['application_count'];
-                                return PieChartSectionData(
-                                  value: double.tryParse(value.toString()) ?? 0,
-                                  title: e['branch_name'],
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        ),
-                      ],
                     ),
-                  ),
-                ),
-                const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                // 3. Category-wise Distribution (Pie)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        const Text("Category wise distribution", style: TextStyle(fontWeight: FontWeight.bold)),
-                        SizedBox(
-                          height: 180,
-                          child: PieChart(
-                            PieChartData(
-                              sections: categoryStats.map<PieChartSectionData>((e) {
-                                final value = e['application_count'];
-                                return PieChartSectionData(
-                                  value: double.tryParse(value.toString()) ?? 0,
-                                  title: e['category_name'],
-                                );
-                              }).toList(),
-                            ),
+                    //2. Branch Dropdown (for 2nd chart)
+                    DropdownButton<String>(
+                      value: branchDropdownValue,
+                      hint: const Text('Select Branch'),
+                      isExpanded: true,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ), // Smaller font for selected value
+                      items: branches.map<DropdownMenuItem<String>>((e) {
+                        return DropdownMenuItem<String>(
+                          value: e['bname'],
+                          child: Text(
+                            e['bname'].toString(),
+                            style: const TextStyle(fontSize: 14), // Smaller font for dropdown items
+                            overflow: TextOverflow.ellipsis,      // Ensures long text is truncated
                           ),
-                        ),
-                      ],
+                        );
+                      }).toList(),
+                      onChanged: (value) => ref.read(selectedBranchProvider.notifier).state = value,
                     ),
-                  ),
-                ),
-                const SizedBox(height: 24),
+                    const SizedBox(height: 8),
 
-                // 4. Gender-wise Distribution (Bar)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        const Text("Gender wise distribution", style: TextStyle(fontWeight: FontWeight.bold)),
-                        SizedBox(
-                          height: 200,
-                          child: BarChart(
-                            BarChartData(
-                              barGroups: genderStats.map<BarChartGroupData>((e) {
-                                return BarChartGroupData(
-                                  x: genderStats.indexOf(e),
-                                  barRods: [
-                                    BarChartRodData(
-                                      toY: double.tryParse((e['male_count'] ?? '0').toString()) ?? 0,
-                                      color: Colors.blue,
-                                      width: 12,
-                                    ),
-                                    BarChartRodData(
-                                      toY: double.tryParse((e['female_count'] ?? '0').toString()) ?? 0,
-                                      color: Colors.pink,
-                                      width: 12,
-                                    ),
-                                  ],
-                                  showingTooltipIndicators: [0, 1],
-                                );
-                              }).toList(),
-                              titlesData: FlTitlesData(
-                                bottomTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: true,
-                                    getTitlesWidget: (value, meta) {
-                                      final idx = value.toInt();
-                                      if (idx < genderStats.length) {
-                                        return Text(genderStats[idx]['programm_name'] ?? '');
-                                      }
-                                      return const Text('');
-                                    },
+                    // 2. Branch-wise Admission Status (Gauge + Text inside Card)
+                    Card(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 2,
+                      child: Container(
+                        width: cardWidth,
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+                        color: const Color.fromARGB(255, 247, 246, 250),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text("Branch wise Admission Status", style: TextStyle(fontWeight: FontWeight.bold)),
+                            SizedBox(
+                              height: chartSize * 0.8,
+                              width: chartSize * 0.8,
+                              child: BranchSemiCircleGauge(
+                                count: branchStudentCount,
+                                max: 500, // or set to your max branch count
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Students in $branchDropdownValue: $branchStudentCount',
+                              style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.blueGrey),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    //3. Responsive Card for 3rd chart properly done
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final categoriesAsync = ref.watch(admissionCategoriesProvider);
+
+                        return categoriesAsync.when(
+                          data: (categories) {
+                            // Filter for only OPEN and OBC (or SEBC if that's the correct name)
+                            final filtered = categories.where((cat) =>
+                                cat['cat_name'] == 'OPEN' || cat['cat_name'] == 'OBC' || cat['cat_name'] == 'SEBC').toList();
+
+                            // Use only OPEN and OBC/SEBC for dropdown and chart
+                            final categoryNames = filtered.map<String>((cat) => cat['cat_name'] as String).toList();
+
+                            // If OBC is not present but SEBC is, use SEBC as the second category
+                            final dropdownNames = categoryNames.contains('OBC')
+                                ? ['OPEN', 'OBC']
+                                : ['OPEN', 'SEBC'];
+
+                            // State for selected category (not really needed if not changing, but for UI consistency)
+                            final selectedCategory = ref.watch(_selectedCategoryProvider);
+
+                            // Set default if not in dropdownNames
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (!dropdownNames.contains(selectedCategory)) {
+                                ref.read(_selectedCategoryProvider.notifier).state = dropdownNames.first;
+                              }
+                            });
+
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                              child: Card(
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // Title inside the box
+                                      const Text(
+                                        "Category wise distribution",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      // Dropdown for categories
+                                      DropdownButton<String>(
+                                        value: selectedCategory,
+                                        items: dropdownNames
+                                            .map((name) => DropdownMenuItem(
+                                                  value: name,
+                                                  child: Text(
+                                                    name,
+                                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                                  ),
+                                                ))
+                                            .toList(),
+                                        onChanged: (value) {
+                                          if (value != null) {
+                                            ref.read(_selectedCategoryProvider.notifier).state = value;
+                                          }
+                                        },
+                                        underline: Container(),
+                                        dropdownColor: Colors.white,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      // Donut chart with 2 categories
+                                      SizedBox(
+                                        height: 160,
+                                        child: _SimpleDonutChart(
+                                          categories: dropdownNames,
+                                          selectedCategory: selectedCategory,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      // Legend
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: dropdownNames.map((name) {
+                                          final color = _getCategoryColor(name);
+                                          return Row(
+                                            children: [
+                                              Container(
+                                                width: 12,
+                                                height: 12,
+                                                decoration: BoxDecoration(
+                                                  color: color,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                name,
+                                                style: const TextStyle(fontWeight: FontWeight.w500),
+                                              ),
+                                              const SizedBox(width: 16),
+                                            ],
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                            ),
+                            );
+                          },
+                          loading: () => const Padding(
+                            padding: EdgeInsets.all(32.0),
+                            child: Center(child: CircularProgressIndicator()),
                           ),
-                        ),
-                      ],
+                          error: (e, _) => Padding(
+                            padding: const EdgeInsets.all(32.0),
+                            child: Text('Error: $e'),
+                          ),
+                        );
+                      },
                     ),
-                  ),
-                ),
-                const SizedBox(height: 24),
 
-                // 5. Cut-Off Trend (Stacked Bar)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        const Text("Cut-Off Trend", style: TextStyle(fontWeight: FontWeight.bold)),
-                        SizedBox(
-                          height: 200,
-                          child: BarChart(
-                            BarChartData(
-                              barGroups: cutOffTrend.map<BarChartGroupData>((e) {
-                                return BarChartGroupData(
-                                  x: cutOffTrend.indexOf(e),
-                                  barRods: [
-                                    BarChartRodData(
-                                      toY: double.tryParse((e['open'] ?? '0').toString()) ?? 0,
-                                      color: Colors.purple,
-                                      width: 12,
+                    // // Category Dropdown (for 3rd chart)
+                    // DropdownButton<String>(
+                    //   value: categoryDropdownValue,
+                    //   hint: const Text('Select Category'),
+                    //   isExpanded: true,
+                    //   items: categoryStats.map<DropdownMenuItem<String>>((e) {
+                    //     return DropdownMenuItem<String>(
+                    //       value: e['category_name'],
+                    //       child: Text(e['category_name'].toString()),
+                    //     );
+                    //   }).toList(),
+                    //   onChanged: (value) => ref.read(selectedCategoryProvider.notifier).state = value,
+                    // ),
+                    // const SizedBox(height: 8),
+
+                    // // Only show chart if filteredCategoryStats is not empty
+                    // if (filteredCategoryStats.isNotEmpty)
+                    //   Card(
+                    //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    //     elevation: 2,
+                    //     child: Padding(
+                    //       padding: const EdgeInsets.all(16),
+                    //       child: Column(
+                    //         children: [
+                    //           const Text("Category wise distribution", style: TextStyle(fontWeight: FontWeight.bold)),
+                    //           SizedBox(
+                    //             height: 200,
+                    //             child: PieChart(
+                    //               PieChartData(
+                    //                 sections: filteredCategoryStats.map<PieChartSectionData>((e) {
+                    //                   final value = e['application_count'];
+                    //                   return PieChartSectionData(
+                    //                     value: double.tryParse(value.toString()) ?? 0,
+                    //                     title: e['category_name'],
+                    //                     color: Colors.accents[filteredCategoryStats.indexOf(e) % Colors.accents.length],
+                    //                     radius: 60,
+                    //                     titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black),
+                    //                   );
+                    //                 }).toList(),
+                    //                 sectionsSpace: 2,
+                    //                 centerSpaceRadius: 30,
+                    //               ),
+                    //             ),
+                    //           ),
+                    //         ],
+                    //       ),
+                    //     ),
+                    //   ),
+                    // const SizedBox(height: 24),
+
+                    // 4. Gender-wise Distribution (Bar)
+                    Card(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 2,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            const Text("Gender wise distribution", style: TextStyle(fontWeight: FontWeight.bold)),
+                            SizedBox(
+                              height: 220,
+                              child: BarChart(
+                                BarChartData(
+                                  barGroups: genderStats.map<BarChartGroupData>((e) {
+                                    return BarChartGroupData(
+                                      x: genderStats.indexOf(e),
+                                      barRods: [
+                                        BarChartRodData(
+                                          toY: double.tryParse((e['male_count'] ?? '0').toString()) ?? 0,
+                                          color: Colors.blue,
+                                          width: 12,
+                                        ),
+                                        BarChartRodData(
+                                          toY: double.tryParse((e['female_count'] ?? '0').toString()) ?? 0,
+                                          color: Colors.pink,
+                                          width: 12,
+                                        ),
+                                      ],
+                                      showingTooltipIndicators: [0, 1],
+                                    );
+                                  }).toList(),
+                                  titlesData: FlTitlesData(
+                                    bottomTitles: AxisTitles(
+                                      sideTitles: SideTitles(
+                                        showTitles: true,
+                                        getTitlesWidget: (value, meta) {
+                                          final idx = value.toInt();
+                                          if (idx < genderStats.length) {
+                                            return Padding(
+                                              padding: const EdgeInsets.only(top: 8.0),
+                                              child: Text(
+                                                genderStats[idx]['programm_name'] ?? '',
+                                                style: const TextStyle(fontSize: 10),
+                                              ),
+                                            );
+                                          }
+                                          return const Text('');
+                                        },
+                                      ),
                                     ),
-                                    BarChartRodData(
-                                      toY: double.tryParse((e['sebc'] ?? '0').toString()) ?? 0,
-                                      color: Colors.teal,
-                                      width: 12,
+                                    leftTitles: AxisTitles(
+                                      sideTitles: SideTitles(showTitles: true),
                                     ),
-                                  ],
-                                );
-                              }).toList(),
-                              titlesData: FlTitlesData(
-                                bottomTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: true,
-                                    getTitlesWidget: (value, meta) {
-                                      final idx = value.toInt();
-                                      if (idx < cutOffTrend.length) {
-                                        return Text(cutOffTrend[idx]['year'] ?? '');
-                                      }
-                                      return const Text('');
-                                    },
+                                    rightTitles: AxisTitles(
+                                      sideTitles: SideTitles(showTitles: false),
+                                    ),
+                                    topTitles: AxisTitles(
+                                      sideTitles: SideTitles(showTitles: false),
+                                    ),
                                   ),
+                                  gridData: FlGridData(show: true),
+                                  borderData: FlBorderData(show: false),
                                 ),
                               ),
                             ),
-                          ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 24),
+                    
+                    
+
+                    // // 5. Cut-Off Trend (Stacked Bar)
+                    // Card(
+                    //   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    //   elevation: 2,
+                    //   child: Padding(
+                    //     padding: const EdgeInsets.all(16),
+                    //     child: Column(
+                    //       children: [
+                    //         const Text("Cut-Off Trend", style: TextStyle(fontWeight: FontWeight.bold)),
+                    //         SizedBox(
+                    //           height: 220,
+                    //           child: BarChart(
+                    //             BarChartData(
+                    //               barGroups: cutOffTrend.map<BarChartGroupData>((e) {
+                    //                 return BarChartGroupData(
+                    //                   x: cutOffTrend.indexOf(e),
+                    //                   barRods: [
+                    //                     BarChartRodData(
+                    //                       toY: double.tryParse((e['open'] ?? '0').toString()) ?? 0,
+                    //                       color: Colors.purple,
+                    //                       width: 12,
+                    //                     ),
+                    //                     BarChartRodData(
+                    //                       toY: double.tryParse((e['sebc'] ?? '0').toString()) ?? 0,
+                    //                       color: Colors.teal,
+                    //                       width: 12,
+                    //                     ),
+                    //                   ],
+                    //                 );
+                    //               }).toList(),
+                    //               titlesData: FlTitlesData(
+                    //                 bottomTitles: AxisTitles(
+                    //                   sideTitles: SideTitles(
+                    //                     showTitles: true,
+                    //                     getTitlesWidget: (value, meta) {
+                    //                       final idx = value.toInt();
+                    //                       if (idx < cutOffTrend.length) {
+                    //                         return Padding(
+                    //                           padding: const EdgeInsets.only(top: 8.0),
+                    //                           child: Text(
+                    //                             cutOffTrend[idx]['year'] ?? '',
+                    //                             style: const TextStyle(fontSize: 10),
+                    //                           ),
+                    //                         );
+                    //                       }
+                    //                       return const Text('');
+                    //                     },
+                    //                   ),
+                    //                 ),
+                    //                 leftTitles: AxisTitles(
+                    //                   sideTitles: SideTitles(showTitles: true),
+                    //                 ),
+                    //                 rightTitles: AxisTitles(
+                    //                   sideTitles: SideTitles(showTitles: false),
+                    //                 ),
+                    //                 topTitles: AxisTitles(
+                    //                   sideTitles: SideTitles(showTitles: false),
+                    //                 ),
+                    //               ),
+                    //               gridData: FlGridData(show: true),
+                    //               borderData: FlBorderData(show: false),
+                    //             ),
+                    //           ),
+                    //         ),
+                    //       ],
+                    //     ),
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 24),
+
+                    // // Chart 3: Category-wise Distribution
+                    // Consumer(
+                    //   builder: (context, ref, _) {
+                    //     final categoriesAsync = ref.watch(admissionCategoriesProvider);
+
+                    //     return categoriesAsync.when(
+                    //       data: (categories) {
+                    //         // Filter for only OPEN and OBC (or SEBC if that's the correct name)
+                    //         final filtered = categories.where((cat) =>
+                    //             cat['cat_name'] == 'OPEN' || cat['cat_name'] == 'OBC' || cat['cat_name'] == 'SEBC').toList();
+
+                    //         // Use only OPEN and OBC/SEBC for dropdown and chart
+                    //         final categoryNames = filtered.map<String>((cat) => cat['cat_name'] as String).toList();
+
+                    //         // If OBC is not present but SEBC is, use SEBC as the second category
+                    //         final dropdownNames = categoryNames.contains('OBC')
+                    //             ? ['OPEN', 'OBC']
+                    //             : ['OPEN', 'SEBC'];
+
+                    //         // State for selected category (not really needed if not changing, but for UI consistency)
+                    //         final selectedCategory = ref.watch(_selectedCategoryProvider);
+
+                    //         // Set default if not in dropdownNames
+                    //         WidgetsBinding.instance.addPostFrameCallback((_) {
+                    //           if (!dropdownNames.contains(selectedCategory)) {
+                    //             ref.read(_selectedCategoryProvider.notifier).state = dropdownNames.first;
+                    //           }
+                    //         });
+
+                    //         return Padding(
+                    //           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    //           child: Card(
+                    //             elevation: 2,
+                    //             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    //             child: Padding(
+                    //               padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+                    //               child: Column(
+                    //                 mainAxisSize: MainAxisSize.min,
+                    //                 children: [
+                    //                   // Title inside the box
+                    //                   const Text(
+                    //                     "Category wise distribution",
+                    //                     style: TextStyle(
+                    //                       fontWeight: FontWeight.bold,
+                    //                       fontSize: 16,
+                    //                     ),
+                    //                   ),
+                    //                   const SizedBox(height: 12),
+                    //                   // Dropdown for categories
+                    //                   DropdownButton<String>(
+                    //                     value: selectedCategory,
+                    //                     items: dropdownNames
+                    //                         .map((name) => DropdownMenuItem(
+                    //                               value: name,
+                    //                               child: Text(
+                    //                                 name,
+                    //                                 style: const TextStyle(fontWeight: FontWeight.bold),
+                    //                               ),
+                    //                             ))
+                    //                         .toList(),
+                    //                     onChanged: (value) {
+                    //                       if (value != null) {
+                    //                         ref.read(_selectedCategoryProvider.notifier).state = value;
+                    //                       }
+                    //                     },
+                    //                     underline: Container(),
+                    //                     dropdownColor: Colors.white,
+                    //                   ),
+                    //                   const SizedBox(height: 12),
+                    //                   // Donut chart with 2 categories
+                    //                   SizedBox(
+                    //                     height: 160,
+                    //                     child: _SimpleDonutChart(
+                    //                       categories: dropdownNames,
+                    //                       selectedCategory: selectedCategory,
+                    //                     ),
+                    //                   ),
+                    //                   const SizedBox(height: 12),
+                    //                   // Legend
+                    //                   Row(
+                    //                     mainAxisAlignment: MainAxisAlignment.center,
+                    //                     children: dropdownNames.map((name) {
+                    //                       final color = _getCategoryColor(name);
+                    //                       return Row(
+                    //                         children: [
+                    //                           Container(
+                    //                             width: 12,
+                    //                             height: 12,
+                    //                             decoration: BoxDecoration(
+                    //                               color: color,
+                    //                               shape: BoxShape.circle,
+                    //                             ),
+                    //                           ),
+                    //                           const SizedBox(width: 4),
+                    //                           Text(
+                    //                             name,
+                    //                             style: const TextStyle(fontWeight: FontWeight.w500),
+                    //                           ),
+                    //                           const SizedBox(width: 16),
+                    //                         ],
+                    //                       );
+                    //                     }).toList(),
+                    //                   ),
+                    //                 ],
+                    //               ),
+                    //             ),
+                    //           ),
+                    //         );
+                    //       },
+                    //       loading: () => const Padding(
+                    //         padding: EdgeInsets.all(32.0),
+                    //         child: Center(child: CircularProgressIndicator()),
+                    //       ),
+                    //       error: (e, _) => Padding(
+                    //         padding: const EdgeInsets.all(32.0),
+                    //         child: Text('Error: $e'),
+                    //       ),
+                    //     );
+                    //   },
+                    // ),
+                  ],
                 ),
-                const SizedBox(height: 24)
-              ],
-            ),
+              );
+            },
           );
         },
       ),
@@ -354,61 +632,407 @@ class AdmissionDashboard extends ConsumerWidget {
   }
 }
 
-// Add this widget in your file (outside the class)
-class SemiCircleGauge extends StatelessWidget {
-  final int value;
-  final int max;
-  final Color color;
-  const SemiCircleGauge({super.key, required this.value, required this.max, this.color = Colors.yellow});
+// Dual color semi-circle gauge widget
+class DualSemiCircleGauge extends StatelessWidget {
+  final int male;
+  final int female;
+  final int total;
+  const DualSemiCircleGauge({
+    required this.male,
+    required this.female,
+    required this.total,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      size: const Size(200, 100),
-      painter: _SemiCircleGaugePainter(value: value, max: max, color: color),
-      child: SizedBox(
-        width: 200,
-        height: 100,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '$value',
-                style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-              ),
-              const Text('Total Applications'),
-            ],
-          ),
-        ),
-      )
+      painter: _DualSemiCircleGaugePainter(
+        male: male,
+        female: female,
+        total: total,
+      ),
     );
   }
 }
 
-class _SemiCircleGaugePainter extends CustomPainter {
-  final int value;
-  final int max;
-  final Color color;
-  _SemiCircleGaugePainter({required this.value, required this.max, required this.color});
+class _DualSemiCircleGaugePainter extends CustomPainter {
+  final int male;
+  final int female;
+  final int total;
+  _DualSemiCircleGaugePainter({
+    required this.male,
+    required this.female,
+    required this.total,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Rect.fromLTWH(0, 0, size.width, size.height * 2);
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 16
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+    final rect = Offset.zero & size;
+    final strokeWidth = size.width * 0.10;
+    final startAngle = math.pi;
+    final sweepAngle = math.pi;
 
     // Draw background arc
-    canvas.drawArc(rect, math.pi, math.pi, false, paint..color = color.withOpacity(0.2));
+    final bgPaint = Paint()
+      ..color = Colors.grey[200]!
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+    canvas.drawArc(rect.deflate(strokeWidth / 2), startAngle, sweepAngle, false, bgPaint);
 
-    // Draw value arc
-    final sweep = (value / (max == 0 ? 1 : max)) * math.pi;
-    canvas.drawArc(rect, math.pi, sweep, false, paint..color = color);
+    if (total > 0) {
+      // Draw male arc
+      final malePaint = Paint()
+        ..color = Colors.blue
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
+      final maleSweep = sweepAngle * (male / total);
+      canvas.drawArc(rect.deflate(strokeWidth / 2), startAngle, maleSweep, false, malePaint);
+
+      // Draw female arc
+      final femalePaint = Paint()
+        ..color = Colors.pink
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
+      final femaleSweep = sweepAngle * (female / total);
+      canvas.drawArc(rect.deflate(strokeWidth / 2), startAngle + maleSweep, femaleSweep, false, femalePaint);
+    }
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
+
+// Branch semi-circle gauge widget
+class BranchSemiCircleGauge extends StatelessWidget {
+  final int count;
+  final int max;
+  const BranchSemiCircleGauge({
+    required this.count,
+    required this.max,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _BranchSemiCircleGaugePainter(
+        count: count,
+        max: max,
+      ),
+    );
+  }
+}
+
+class _BranchSemiCircleGaugePainter extends CustomPainter {
+  final int count;
+  final int max;
+  _BranchSemiCircleGaugePainter({
+    required this.count,
+    required this.max,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final strokeWidth = size.width * 0.10;
+    final startAngle = math.pi;
+    final sweepAngle = math.pi;
+
+    // Draw background arc
+    final bgPaint = Paint()
+      ..color = Colors.grey[200]!
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+    canvas.drawArc(rect.deflate(strokeWidth / 2), startAngle, sweepAngle, false, bgPaint);
+
+    if (max > 0) {
+      // Draw filled arc based on count
+      final fillPaint = Paint()
+        ..color = Colors.green
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
+      final sweep = sweepAngle * (count / max);
+      canvas.drawArc(rect.deflate(strokeWidth / 2), startAngle, sweep, false, fillPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+// Helper for category color
+Color _getCategoryColor(String name) {
+  switch (name) {
+    case 'OPEN':
+      return Colors.deepPurple;
+    case 'OBC':
+    case 'SEBC':
+      return Colors.purple;
+    default:
+      return Colors.grey;
+  }
+}
+
+// Dummy DonutChartWidget for illustration (replace with your actual chart widget)
+class _SimpleDonutChart extends StatelessWidget {
+  final List<String> categories;
+  final String selectedCategory;
+
+  const _SimpleDonutChart({
+    super.key,
+    required this.categories,
+    required this.selectedCategory,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // For demo: show 50/50 split
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        SizedBox(
+          width: 120,
+          height: 120,
+          child: CircularProgressIndicator(
+            value: 0.5,
+            strokeWidth: 22,
+            valueColor: AlwaysStoppedAnimation(_getCategoryColor(categories[0])),
+            backgroundColor: _getCategoryColor(categories[1]),
+          ),
+        ),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '${categories.length}',
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87),
+            ),
+            const Text(
+              'Categories',
+              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class CategoryWiseDistributionChart extends StatelessWidget {
+  const CategoryWiseDistributionChart({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final categoriesAsync = ref.watch(admissionCategoriesProvider);
+
+        return categoriesAsync.when(
+          data: (categories) {
+            // Filter for only OPEN and OBC (or SEBC if that's the correct name)
+            final filtered = categories.where((cat) =>
+                cat['cat_name'] == 'OPEN' || cat['cat_name'] == 'OBC' || cat['cat_name'] == 'SEBC').toList();
+
+            // Use only OPEN and OBC/SEBC for dropdown and chart
+            final categoryNames = filtered.map<String>((cat) => cat['cat_name'] as String).toList();
+
+            // If OBC is not present but SEBC is, use SEBC as the second category
+            final dropdownNames = categoryNames.contains('OBC')
+                ? ['OPEN', 'OBC']
+                : ['OPEN', 'SEBC'];
+
+            // State for selected category (not really needed if not changing, but for UI consistency)
+            final selectedCategory = ref.watch(_selectedCategoryProvider);
+
+            // Set default if not in dropdownNames
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!dropdownNames.contains(selectedCategory)) {
+                ref.read(_selectedCategoryProvider.notifier).state = dropdownNames.first;
+              }
+            });
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Title inside the box
+                      const Text(
+                        "Category wise distribution",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // Dropdown for categories
+                      DropdownButton<String>(
+                        value: selectedCategory,
+                        items: dropdownNames
+                            .map((name) => DropdownMenuItem(
+                                  value: name,
+                                  child: Text(
+                                    name,
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            ref.read(_selectedCategoryProvider.notifier).state = value;
+                          }
+                        },
+                        underline: Container(),
+                        dropdownColor: Colors.white,
+                      ),
+                      const SizedBox(height: 12),
+                      // Donut chart with 2 categories
+                      SizedBox(
+                        height: 160,
+                        child: _SimpleDonutChart(
+                          categories: dropdownNames,
+                          selectedCategory: selectedCategory,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // Legend
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: dropdownNames.map((name) {
+                          final color = _getCategoryColor(name);
+                          return Row(
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                name,
+                                style: const TextStyle(fontWeight: FontWeight.w500),
+                              ),
+                              const SizedBox(width: 16),
+                            ],
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+          loading: () => const Padding(
+            padding: EdgeInsets.all(32.0),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (e, _) => Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Text('Error: $e'),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class DashboardScreen extends ConsumerWidget {
+  const DashboardScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F6FA),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              // ...your first four charts/widgets...
+              // Chart 1
+              // Chart 2
+              // Chart 3
+              // Chart 4
+
+              // 5th Chart: Cut-Off Trend
+              const CutoffTrendChart(),
+
+              // ...any widgets after the 5th chart...
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class CutoffTrendChart extends ConsumerStatefulWidget {
+  const CutoffTrendChart({Key? key}) : super(key: key);
+
+  @override
+  ConsumerState<CutoffTrendChart> createState() => _CutoffTrendChartState();
+}
+
+class _CutoffTrendChartState extends ConsumerState<CutoffTrendChart> {
+  @override
+  Widget build(BuildContext context) {
+    // Your chart building logic here
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            const Text("Cut-Off Trend", style: TextStyle(fontWeight: FontWeight.bold)),
+            SizedBox(
+              height: 220,
+              child: BarChart(
+                BarChartData(
+                  barGroups: [], // Populate with your data
+                  titlesData: FlTitlesData(
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, meta) {
+                          // Your x-axis label logic
+                          return const Text('');
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: true),
+                    ),
+                    rightTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                  ),
+                  gridData: FlGridData(show: true),
+                  borderData: FlBorderData(show: false),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+

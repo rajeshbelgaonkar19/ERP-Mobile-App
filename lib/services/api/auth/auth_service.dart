@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../api_client.dart';
+import '../admission/api_client.dart';
 
 class AuthService {
   final Dio _dio = ApiClient.dio;

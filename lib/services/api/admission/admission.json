@@ -1,94 +1,645 @@
 {
-    "baseUrl": "https://api.test.vppcoe.getflytechnologies.com/api",
-    "admission": {
-        "getBranch": {
-            "method": "GET",
-            "endpoint": "/admission/getBranch"
-        },
-        "getProgram": {
-            "method": "GET",
-            "endpoint": "/admission/getProgram"
-        },
-        "getCategory": {
-            "method": "GET",
-            "endpoint": "/admission/getCategory"
-        },
-        "admissionDashboard": {
-            "method": "GET",
-            "endpoint": "/admission/admissionDashBoardN"
-        },
-        "pendingCount": {
-            "method": "GET",
-            "endpoint": "/admission/pendingCount"
-        },
-        "academicYears": {
-            "method": "GET",
-            "endpoint": "/admission/academic-years"
-        },
-        "startAdmission": {
-            "method": "POST",
-            "endpoint": "/admission/start-admission",
-            "body": {
-                "academicYear": "integer"
-            }
-        },
-        "stopAdmission": {
-            "method": "POST",
-            "endpoint": "/admission/stop-admission",
-            "body": {
-                "academicYear": "integer"
-            }
-        },
-        "getAddCapApp": {
-            "method": "GET",
-            "endpoint": "/admission/getaddCapApp"
-        },
-        "getCapAppById": {
-            "method": "GET",
-            "endpoint": "/admission/addCapApp/:stud_id"
-        },
-        "addCapApp": {
-            "method": "POST",
-            "endpoint": "/admission/addCapApp",
-            "body": {
-                "cap_application": "string",
-                "gr_number": "string",
-                "last_name": "string",
-                "first_name": "string",
-                "father_name": "string",
-                "mother_name": "string",
-                "cat": "string",
-                "seat_type": "string",
-                "round": "string",
-                "years": "string",
-                "branch": "string",
-                "email": "string",
-                "password": "string"
-            }
-        },
-        "applications": {
-            "method": "GET",
-            "endpoint": "/admission/applications?academicYear="
-        },
-        "signup": {
-            "method": "GET",
-            "endpoint": "/admission/signup?academicYear="
-        },
-        "revertCancel": {
-            "method": "POST",
-            "endpoint": "/admission/revert_cancel",
-            "body": {
-                "uid": "integer",
-                "academicYear": "integer"
-            }
-        },
-        "cancelledApplications": {
-            "method": "GET",
-            "endpoint": "/admission/cancelled_applications?academicYear="
-        },
-        "cancelledApplicationsReport": {
-            "method": "GET",
-            "endpoint": "/admission/cancelled_applications_report?academicYear="
+  "baseUrl": "https://api.test.vppcoe.getflytechnologies.com/api",
+  "admission": {
+    "getBranch": {
+      "method": "GET",
+      "endpoint": "/admission/getBranch",
+      "responseExample": {
+        "branch": [
+          {
+            "branch_id": 1,
+            "bname": "Computer Engineering",
+            "b_short_name": "CS"
+          },
+          {
+            "branch_id": 2,
+            "bname": "Computer Science & Engineering (Ai & Ml)",
+            "b_short_name": "AIDS"
+          },
+          {
+            "branch_id": 3,
+            "bname": "Electronics and Telecommunication Engineering",
+            "b_short_name": "EXTC"
+          },
+          {
+            "branch_id": 4,
+            "bname": "Information Technology",
+            "b_short_name": "IT"
+          },
+          {
+            "branch_id": 5,
+            "bname": "Mechatronics",
+            "b_short_name": "MECHATRONICS"
+          },
+          {
+            "branch_id": 6,
+            "bname": "Electronics & Computer Science",
+            "b_short_name": "ECS"
+          },
+          {
+            "branch_id": 7,
+            "bname": "Electronics",
+            "b_short_name": "ELECTRONICS"
+          },
+          {
+            "branch_id": 8,
+            "bname": "Artificial Intelligence and Data Science",
+            "b_short_name": "AIDS"
+          }
+        ]
+      }
+    },
+    "getProgram": {
+      "method": "GET",
+      "endpoint": "/admission/getProgram",
+      "responseExample": {
+        "program": [
+          {
+            "programm_id": 1,
+            "programm_name": "First Year Bachelor of Engineering (F.Y. B.E.)"
+          },
+          {
+            "programm_id": 2,
+            "programm_name": "Direct Second Year Engineering (D.S.E.)"
+          },
+          {
+            "programm_id": 3,
+            "programm_name": "Second Year Engineering (S.E.)"
+          },
+          {
+            "programm_id": 4,
+            "programm_name": "Third Year Engineering (T.E.)"
+          },
+          {
+            "programm_id": 5,
+            "programm_name": "Final Year Engineering (B.E.)"
+          }
+        ]
+      }
+    },
+    "getCategory": {
+      "method": "GET",
+      "endpoint": "/admission/getCategory",
+      "responseExample": {
+        "category": [
+          {
+            "cat_id": 1,
+            "cat_name": "OPEN"
+          },
+          {
+            "cat_id": 2,
+            "cat_name": "OBC"
+          }
+        ]
+      }
+    },
+    "admissionDashboard": {
+      "method": "GET",
+      "endpoint": "/admission/admissionDashBoardN",
+      "responseExample": {
+        "categoryFinalCount": [],
+        "academicYears": [
+          {
+            "academic_id": 1,
+            "academic_name": "2024-25",
+            "current_ay": 1,
+            "is_admission": 0
+          }
+        ],
+        "genderCount": [
+          {
+            "programm_id": 1,
+            "programm_name": "F.Y.B.E.",
+            "male_count": "352",
+            "female_count": "148"
+          }
+        ]
+      }
+    },
+    "pendingCount": {
+      "method": "GET",
+      "endpoint": "/admission/pendingCount",
+      "responseExample": [
+        {
+          "pcs": 562,
+          "pit": 559,
+          "paids": 276,
+          "pextc": 70,
+          "pmech": 60,
+          "pec": 70
         }
+      ]
+    },
+    "academicYears": {
+      "method": "GET",
+      "endpoint": "/admission/academic-years",
+      "responseExample": {
+        "academic_year": [
+          {
+            "academic_id": 1,
+            "academic_name": "2024-25",
+            "current_ay": 1,
+            "is_admission": 0
+          }
+        ]
+      }
+    },
+    "startAdmission": {
+      "method": "POST",
+      "endpoint": "/admission/start-admission",
+      "body": {
+        "academicYear": "integer"
+      }
+    },
+    "stopAdmission": {
+      "method": "POST",
+      "endpoint": "/admission/stop-admission",
+      "body": {
+        "academicYear": "integer"
+      }
+    },
+    "getAddCapApp": {
+      "method": "GET",
+      "endpoint": "/admission/getaddCapApp",
+      "responseExample": {
+        "result": [
+          {
+            "programm_id": 1,
+            "programm_name": "First Year Bachelor of Engineering (F.Y. B.E.)"
+          },
+          {
+            "programm_id": 2,
+            "programm_name": "Direct Second Year Engineering (D.S.E.)"
+          },
+          {
+            "programm_id": 3,
+            "programm_name": "Second Year Engineering (S.E.)"
+          },
+          {
+            "programm_id": 4,
+            "programm_name": "Third Year Engineering (T.E.)"
+          },
+          {
+            "programm_id": 5,
+            "programm_name": "Final Year Engineering (B.E.)"
+          }
+        ]
+      }
+    },
+    "getCapAppById": {
+      "method": "GET",
+      "endpoint": "/admission/addCapApp/{stud_id}",
+      "pathParams": {
+        "stud_id": "string"
+      },
+      "responseExample": {
+        "application": {
+          "branch": null,
+          "cap_application": "VU1S2223017",
+          "cat": "OPEN",
+          "round": 0,
+          "first_name": null,
+          "last_name": null,
+          "father_name": null,
+          "mother_name": null,
+          "seat_type": "CAP",
+          "years": "Third Year",
+          "gr_number": null,
+          "email": "mayekaraj05@gmail.com"
+        }
+      }
+    },
+    "addCapApp": {
+      "method": "POST",
+      "endpoint": "/admission/addCapApp",
+      "body": {
+        "cap_application": "string",
+        "gr_number": "string",
+        "last_name": "string",
+        "first_name": "string",
+        "father_name": "string",
+        "mother_name": "string",
+        "cat": "string",
+        "seat_type": "string",
+        "round": "string",
+        "years": "string",
+        "branch": "string",
+        "email": "string",
+        "password": "string"
+      }
+    },
+    "applications": {
+      "method": "GET",
+      "endpoint": "/admission/applications?academicYear=",
+      "queryParams": {
+        "academicYear": "integer"
+      },
+      "responseExample": {
+        "applications": []
+      }
+    },
+    "signup": {
+      "method": "GET",
+      "endpoint": "/admission/signup?academicYear=",
+      "queryParams": {
+        "academicYear": "integer"
+      },
+      "responseExample": {
+        "branch": [
+          {
+            "branch_id": 1,
+            "bname": "Computer Engineering",
+            "b_short_name": "CS"
+          }
+        ],
+        "programms": [
+          {
+            "programm_id": 1,
+            "programm_name": "First Year Bachelor of Engineering (F.Y. B.E.)"
+          }
+        ],
+        "seat_type": [
+          {
+            "seat_type_id": 1,
+            "seat_name": "CAP"
+          }
+        ]
+      }
+    },
+    "revertCancel": {
+      "method": "POST",
+      "endpoint": "/admission/revert_cancel",
+      "body": {
+        "uid": "integer",
+        "academicYear": "integer"
+      }
+    },
+    "cancelledApplications": {
+      "method": "GET",
+      "endpoint": "/admission/cancelled_applications?academicYear=",
+      "queryParams": {
+        "academicYear": "integer"
+      },
+      "responseExample": {
+        "message": "Success",
+        "cancelledResult": []
+      }
+    },
+    "cancelledApplicationsReport": {
+      "method": "GET",
+      "endpoint": "/admission/cancelled_applications_report?academicYear=",
+      "queryParams": {
+        "academicYear": "integer"
+      },
+      "responseExample": "CSV or XLSX content to be downloaded as file."
+    },
+    "cutoffTrend": {
+      "method": "GET",
+      "endpoint": "/admission/cutoffTrend",
+      "responseExample": {
+        "cutoff_trend": [
+          {
+            "academic_year": "2023-24",
+            "category": "OPEN",
+            "data": [
+              {
+                "branch": "Artificial Intelligence and Data Science",
+                "percentile": 16.24
+              },
+              {
+                "branch": "Computer Engineering",
+                "percentile": 13.32
+              },
+              {
+                "branch": "Information Technology",
+                "percentile": 62.78
+              }
+            ]
+          },
+          {
+            "academic_year": "2024-25",
+            "category": "OPEN",
+            "data": [
+              {
+                "branch": "Computer Engineering",
+                "percentile": 55.78
+              },
+              {
+                "branch": "Information Technology",
+                "percentile": 55.78
+              }
+            ]
+          },
+          {
+            "academic_year": "2025-26",
+            "category": "OPEN",
+            "data": [
+              {
+                "branch": "Computer Engineering",
+                "percentile": 55.78
+              },
+              {
+                "branch": "Information Technology",
+                "percentile": 55.78
+              }
+            ]
+          },
+          {
+            "academic_year": "2023-24",
+            "category": "OBC",
+            "data": [
+              {
+                "branch": "Computer Engineering",
+                "percentile": 27.32
+              },
+              {
+                "branch": "Artificial Intelligence and Data Science",
+                "percentile": 39.78
+              },
+              {
+                "branch": "Information Technology",
+                "percentile": 32.66
+              }
+            ]
+          },
+          {
+            "academic_year": "2024-25",
+            "category": "OBC",
+            "data": [
+              {
+                "branch": "Computer Engineering",
+                "percentile": 50.03
+              },
+              {
+                "branch": "Information Technology",
+                "percentile": 80.74
+              }
+            ]
+          },
+          {
+            "academic_year": "2023-24",
+            "category": "EBC",
+            "data": [
+              {
+                "branch": "Information Technology",
+                "percentile": 40.65
+              },
+              {
+                "branch": "Computer Engineering",
+                "percentile": 49.04
+              },
+              {
+                "branch": "Artificial Intelligence and Data Science",
+                "percentile": 26.9
+              }
+            ]
+          },
+          {
+            "academic_year": "2024-25",
+            "category": "EBC",
+            "data": [
+              {
+                "branch": "Information Technology",
+                "percentile": 82.45
+              },
+              {
+                "branch": "Computer Engineering",
+                "percentile": 85.87
+              }
+            ]
+          },
+          {
+            "academic_year": "2023-24",
+            "category": "EWS",
+            "data": [
+              {
+                "branch": "Information Technology",
+                "percentile": 84.39
+              },
+              {
+                "branch": "Computer Engineering",
+                "percentile": 87.39
+              },
+              {
+                "branch": "Artificial Intelligence and Data Science",
+                "percentile": 84.74
+              }
+            ]
+          },
+          {
+            "academic_year": "2024-25",
+            "category": "EWS",
+            "data": [
+              {
+                "branch": "Information Technology",
+                "percentile": 72.5
+              },
+              {
+                "branch": "Computer Engineering",
+                "percentile": 79.4
+              }
+            ]
+          },
+          {
+            "academic_year": "2023-24",
+            "category": "SBC",
+            "data": [
+              {
+                "branch": "Computer Engineering",
+                "percentile": 88.92
+              },
+              {
+                "branch": "Information Technology",
+                "percentile": 80.92
+              }
+            ]
+          },
+          {
+            "academic_year": "2024-25",
+            "category": "SBC",
+            "data": [
+              {
+                "branch": "Computer Engineering",
+                "percentile": 88.92
+              },
+              {
+                "branch": "Information Technology",
+                "percentile": 80.92
+              }
+            ]
+          },
+          {
+            "academic_year": "2023-24",
+            "category": "VJ",
+            "data": [
+              {
+                "branch": "Artificial Intelligence and Data Science",
+                "percentile": 67
+              },
+              {
+                "branch": "Information Technology",
+                "percentile": 67.39
+              },
+              {
+                "branch": "Computer Engineering",
+                "percentile": 35.13
+              }
+            ]
+          },
+          {
+            "academic_year": "2024-25",
+            "category": "VJ",
+            "data": [
+              {
+                "branch": "Information Technology",
+                "percentile": 58.15
+              },
+              {
+                "branch": "Computer Engineering",
+                "percentile": 75.52
+              }
+            ]
+          },
+          {
+            "academic_year": "2023-24",
+            "category": "NT",
+            "data": [
+              {
+                "branch": "Computer Engineering",
+                "percentile": 72
+              },
+              {
+                "branch": "Information Technology",
+                "percentile": 78.03
+              },
+              {
+                "branch": "Artificial Intelligence and Data Science",
+                "percentile": 75.13
+              }
+            ]
+          },
+          {
+            "academic_year": "2024-25",
+            "category": "NT",
+            "data": [
+              {
+                "branch": "Computer Engineering",
+                "percentile": 69.46
+              },
+              {
+                "branch": "Information Technology",
+                "percentile": 65.55
+              }
+            ]
+          },
+          {
+            "academic_year": "2023-24",
+            "category": "SC",
+            "data": [
+              {
+                "branch": "Information Technology",
+                "percentile": 57.72
+              },
+              {
+                "branch": "Computer Engineering",
+                "percentile": 33.82
+              },
+              {
+                "branch": "Artificial Intelligence and Data Science",
+                "percentile": 73.37
+              }
+            ]
+          },
+          {
+            "academic_year": "2024-25",
+            "category": "SC",
+            "data": [
+              {
+                "branch": "Information Technology",
+                "percentile": 80.63
+              },
+              {
+                "branch": "Computer Engineering",
+                "percentile": 78.56
+              }
+            ]
+          },
+          {
+            "academic_year": "2023-24",
+            "category": "ST",
+            "data": [
+              {
+                "branch": "Artificial Intelligence and Data Science",
+                "percentile": 8.86
+              },
+              {
+                "branch": "Computer Engineering",
+                "percentile": 40.65
+              },
+              {
+                "branch": "Information Technology",
+                "percentile": 15.93
+              }
+            ]
+          },
+          {
+            "academic_year": "2024-25",
+            "category": "ST",
+            "data": [
+              {
+                "branch": "Computer Engineering",
+                "percentile": 59.34
+              },
+              {
+                "branch": "Information Technology",
+                "percentile": 24.76
+              }
+            ]
+          },
+          {
+            "academic_year": "2023-24",
+            "category": "TFWS",
+            "data": [
+              {
+                "branch": "Information Technology",
+                "percentile": 92.13
+              },
+              {
+                "branch": "Computer Engineering",
+                "percentile": 91.77
+              },
+              {
+                "branch": "Artificial Intelligence and Data Science",
+                "percentile": 88.67
+              }
+            ]
+          },
+          {
+            "academic_year": "2024-25",
+            "category": "TFWS",
+            "data": [
+              {
+                "branch": "Information Technology",
+                "percentile": 91.78
+              },
+              {
+                "branch": "Computer Engineering",
+                "percentile": 93.75
+              }
+            ]
+          },
+          {
+            "academic_year": "2023-24",
+            "category": "J&K",
+            "data": []
+          },
+          {
+            "academic_year": "2024-25",
+            "category": "J&K",
+            "data": []
+          }
+        ]
+      }
     }
+  }
 }
