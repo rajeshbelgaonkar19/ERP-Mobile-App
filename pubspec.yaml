@@ -30,5 +30,6 @@ flutter:
   assets:
     - assets/logo.png
     - assets/image.png
+    - lib/services/api/admission/admission.json
 
 

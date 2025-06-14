@@ -80,8 +80,9 @@ class AdmissionService {
   }
 
   Future<List<dynamic>> getCutoffTrend() async {
-    final response = await ApiClient.get('/admission/cutoffTrend');
-    return response['cutoff_trend'] ?? [];
+    final data = await ApiClient.get('/admission/cutoffTrend');
+    // The API returns { "cutoff_trend": [...] }
+    return data['cutoff_trend'] as List<dynamic>;
   }
 
   // Future<Response<Uint8List>> downloadCancelledReport(int academicYear) async {

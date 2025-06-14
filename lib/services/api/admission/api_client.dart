@@ -20,7 +20,7 @@ class ApiClient {
         onRequest: (options, handler) async {
           const storage = FlutterSecureStorage();
           final token = await storage.read(key: 'auth_token');
-          if (token != null) {
+          if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           }
           return handler.next(options);
